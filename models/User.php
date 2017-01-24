@@ -2,38 +2,61 @@
 
 namespace app\models;
 
-class User extends \yii\base\Object implements \yii\web\IdentityInterface
+use yii;
+use yii\base\Exception;
+use yii\db\ActiveRecord;
+use yii\behaviors\TimestampBehavior;
+
+/**
+ * Class User
+ *
+ * @package app\models
+ *
+ * @property integer    $id
+ * @property string     $email
+ * @property string     $password
+ * @property int        $status
+ * @property string     $token
+ * @property string     $fio
+ * @property int        $create_at
+ * @property int        $updated_at
+ *
+ */
+class User extends ActiveRecord implements \yii\web\IdentityInterface
 {
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
+    const ROLE_ADMINISTRATOR = 'administrator'; // Администратор
+    const ROLE_USER = 'user';                 // Пользователь
 
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
+    const STATUS_DELETED = 0;   // Удален
+    const STATUS_REGISTRED = 1; // Зарегистрирован
+    const STATUS_ACTIVE = 2;    // Активнен
 
+    /**
+     * @inheritdoc
+     */
+    public static function tableName()
+    {
+        return '{{%user}}';
+    }
+
+    /**
+     * Генерирует хеш пароля
+     *
+     * @param string $password пароль
+     *
+     * @return mixed
+     */
+    public static function generatePasswordHash($password)
+    {
+        return md5($password);
+    }
 
     /**
      * @inheritdoc
      */
     public static function findIdentity($id)
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return static::findOne(['id' => $id, 'status' => self::STATUS_ACTIVE]);
     }
 
     /**
@@ -41,13 +64,7 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        throw new NotSupportedException('"findIdentityByAccessToken" is not implemented.');
     }
 
     /**
@@ -58,13 +75,57 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public static function findByUsername($username)
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
+        return static::findOne(['username' => $username, 'status' => self::STATUS_ACTIVE]);
+    }
 
-        return null;
+    /**
+     * Поиск пользователя по email
+     *
+     * @param $email
+     *
+     * @return static|null
+     */
+    public static function findByEmail($email)
+    {
+        return static::findOne(['email' => $email, 'status' => self::STATUS_ACTIVE]);
+    }
+
+    /**
+     * Поиск по токену
+     *
+     * @param string $token password reset token
+     * @return static|null
+     */
+    public static function findByToken($token)
+    {
+        return static::findOne(['token' => $token]);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function behaviors()
+    {
+        return [
+            TimestampBehavior::className(),
+        ];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function rules()
+    {
+        return [
+            ['email', 'unique'],
+            ['email', 'required', 'on' => 'update', 'message' => 'Введите электронный адрес'],
+
+            ['fio', 'filter', 'filter' => 'trim'],
+            ['fio', 'required', 'on' => 'update', 'message' => 'Введите имя'],
+
+            ['status', 'default', 'value' => self::STATUS_REGISTRED],
+            ['status', 'in', 'range' => [self::STATUS_DELETED, self::STATUS_REGISTRED, self::STATUS_ACTIVE,]],
+        ];
     }
 
     /**
@@ -76,11 +137,21 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
     }
 
     /**
+     * Возвращает логин пользователя
+     *
+     * @return string
+     */
+    public function getUsername()
+    {
+        return $this->email;
+    }
+
+    /**
      * @inheritdoc
      */
     public function getAuthKey()
     {
-        return $this->authKey;
+        return $this->token;
     }
 
     /**
@@ -88,7 +159,7 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public function validateAuthKey($authKey)
     {
-        return $this->authKey === $authKey;
+        return $this->token === $authKey;
     }
 
     /**
@@ -99,6 +170,56 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public function validatePassword($password)
     {
-        return $this->password === $password;
+        return $this->password === self::generatePasswordHash($password);
+    }
+
+    /**
+     * Устанавливает пароль
+     *
+     * @param string $password
+     */
+    public function setPassword($password)
+    {
+        $this->password = self::generatePasswordHash($password);
+    }
+
+    /**
+     * Устанавливает роль
+     *
+     * @param string $name название роли
+     *
+     * @throws Exception
+     */
+    public function setRole($name)
+    {
+        if ($this->isNewRecord) {
+            throw new Exception('Нельзя устанавливать роль не созданому пользователю');
+        }
+
+        $auth = Yii::$app->authManager;
+        $role = $auth->getRole($name);
+
+        $auth->assign($role, $this->id);
+    }
+
+    /**
+     * Проверяет является ли пользователь авминистратором
+     *
+     * @return bool
+     */
+    public function getIsAdministrator()
+    {
+        if (!$this->isNewRecord) {
+
+            $roles = Yii::$app->authManager->getRolesByUser($this->id);
+
+            foreach ($roles as $role) {
+                if ($role->name == User::ROLE_ADMINISTRATOR) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

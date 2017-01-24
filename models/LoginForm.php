@@ -2,7 +2,7 @@
 
 namespace app\models;
 
-use Yii;
+use yii;
 use yii\base\Model;
 
 /**
@@ -32,6 +32,17 @@ class LoginForm extends Model
             ['rememberMe', 'boolean'],
             // password is validated by validatePassword()
             ['password', 'validatePassword'],
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function attributeLabels()
+    {
+        return [
+            'username' => 'Email',
+            'password' => 'Пароль',
         ];
     }
 
@@ -73,7 +84,7 @@ class LoginForm extends Model
     public function getUser()
     {
         if ($this->_user === false) {
-            $this->_user = User::findByUsername($this->username);
+            $this->_user = User::findByEmail($this->username);
         }
 
         return $this->_user;

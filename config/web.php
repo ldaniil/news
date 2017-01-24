@@ -15,6 +15,7 @@ $config = [
             'class' => 'yii\caching\FileCache',
         ],
         'user' => [
+            'class' => 'app\components\User',
             'identityClass' => 'app\models\User',
             'enableAutoLogin' => true,
         ],
@@ -42,7 +43,17 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                '<module[\w-]+>/<action[\w-]+>' => '<module>/index/<action>',
             ],
+        ],
+        'authManager' => [
+            'class' => 'yii\rbac\DbManager',
+            'cache' => 'cache' //Включаем кеширование
+        ],
+    ],
+    'modules' => [
+        'administration' => [
+            'class' => 'app\modules\backend\Module',
         ],
     ],
     'params' => $params,

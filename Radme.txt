@@ -1,0 +1,6 @@
+### Установка
+
+1. Выполняем команды
+php yii migrate --migrationPath=@yii/rbac/migrations/
+php yii rbac
+php yii migrate
