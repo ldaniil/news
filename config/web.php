@@ -27,7 +27,7 @@ $config = [
             // send all mails to a file by default. You have to set
             // 'useFileTransport' to false and configure a transport
             // for the mailer to send real emails.
-            'useFileTransport' => true,
+            'useFileTransport' => false,
         ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
@@ -43,7 +43,10 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
-                '<module[\w-]+>/<action[\w-]+>' => '<module>/index/<action>',
+                'activation/<token:[\w]+>'          => 'site/activation',
+                '<action[\w-]+>'                    => 'site/<action>',
+                '<controller[\w-]+>/<action[\w-]+>' => '<controller>/<action>',
+                '<module[\w-]+>/<action[\w-]+>'     => '<module>/index/<action>',
             ],
         ],
         'authManager' => [

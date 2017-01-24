@@ -2,12 +2,13 @@
 
 namespace app\controllers;
 
-use Yii;
+use yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
-use app\models\ContactForm;
+use app\models\RegistrationForm;
+use app\models\User;
 
 class SiteController extends Controller
 {
@@ -95,31 +96,33 @@ class SiteController extends Controller
         return $this->goHome();
     }
 
-    /**
-     * Displays contact page.
-     *
-     * @return string
-     */
-    public function actionContact()
+    public function actionRegistration()
     {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->contact(Yii::$app->params['adminEmail'])) {
-            Yii::$app->session->setFlash('contactFormSubmitted');
+        $registration = new RegistrationForm();
 
-            return $this->refresh();
+        if ($registration->load(Yii::$app->request->post())) {
+            $registration->register();
         }
-        return $this->render('contact', [
-            'model' => $model,
-        ]);
+
+        return $this->render('registration', ['registration' => $registration]);
     }
 
     /**
-     * Displays about page.
+     * Активация учетной записи
      *
-     * @return string
+     * @param $token
+     *
+     * @return \yii\web\Response
      */
-    public function actionAbout()
+    public function actionActivation($token)
     {
-        return $this->render('about');
+        $user = User::findByToken($token);
+
+        if ($user && $user->activate()) {
+            Yii::$app->user->login($user, 3600 * 24 * 30);
+            return $this->goHome();
+        }
+
+        return $this->render('activation');
     }
 }

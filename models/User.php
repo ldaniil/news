@@ -177,10 +177,14 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
      * Устанавливает пароль
      *
      * @param string $password
+     *
+     * @return $this
      */
     public function setPassword($password)
     {
         $this->password = self::generatePasswordHash($password);
+
+        return $this;
     }
 
     /**
@@ -188,6 +192,7 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
      *
      * @param string $name название роли
      *
+     * @return $this
      * @throws Exception
      */
     public function setRole($name)
@@ -200,6 +205,37 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
         $role = $auth->getRole($name);
 
         $auth->assign($role, $this->id);
+
+        return $this;
+    }
+
+    /**
+     * Генерирует и устанавливает код подтверждения операций
+     *
+     * @return $this
+     */
+    public function generateToken()
+    {
+        $this->token = md5(time() . rand(111111111, 999999999));
+
+        $this->update(false, ['token']);
+
+        return $this;
+    }
+
+    /**
+     * Активирует учетную запись пользователя
+     *
+     * @throws \Exception
+     */
+    public function activate()
+    {
+        $this->status = User::STATUS_ACTIVE;
+        $this->token = null;
+
+        $this->update(false, ['status', 'token']);
+
+        return true;
     }
 
     /**
@@ -221,5 +257,15 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
         }
 
         return false;
+    }
+
+    /**
+     * Проверякт активен ли пользователь
+     *
+     * @return bool
+     */
+    public function getIsActive()
+    {
+        return $this->status == self::STATUS_ACTIVE;
     }
 }

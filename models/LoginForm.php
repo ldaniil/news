@@ -28,6 +28,7 @@ class LoginForm extends Model
         return [
             // username and password are both required
             [['username', 'password'], 'required'],
+            ['username', 'isActive'],
             // rememberMe must be a boolean value
             ['rememberMe', 'boolean'],
             // password is validated by validatePassword()
@@ -41,8 +42,9 @@ class LoginForm extends Model
     public function attributeLabels()
     {
         return [
-            'username' => 'Email',
-            'password' => 'Пароль',
+            'username'   => 'Email',
+            'password'   => 'Пароль',
+            'rememberMe' => 'Запомнить'
         ];
     }
 
@@ -88,5 +90,31 @@ class LoginForm extends Model
         }
 
         return $this->_user;
+    }
+
+    /**
+     * Проверяет активирована ли учетная запись
+     *
+     * @param $attribute
+     * @param $params
+     *
+     * @return bool
+     */
+    public function isActive($attribute, $params)
+    {
+        $isActive = false;
+
+        $user = $this->getUser();
+
+        if ($user) {
+            $isActive = $user->isActive;
+        }
+
+        if (!$isActive) {
+            $this->addError($attribute, 'Пользователь не активирован');
+            return false;
+        }
+
+        return true;
     }
 }
