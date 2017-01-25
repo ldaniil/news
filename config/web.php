@@ -5,6 +5,7 @@ $params = require(__DIR__ . '/params.php');
 $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
+    'language' => 'ru-RU',
     'bootstrap' => ['log'],
     'components' => [
         'request' => [
@@ -43,10 +44,13 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
-                'activation/<token:[\w]+>'          => 'site/activation',
-                '<action[\w-]+>'                    => 'site/<action>',
-                '<controller[\w-]+>/<action[\w-]+>' => '<controller>/<action>',
-                '<module[\w-]+>/<action[\w-]+>'     => '<module>/index/<action>',
+                '<module[\w-]+>'                                       => '<module>/index',
+                '<module[\w-]+>/<action(login|logout)>'                => '<module>/index/<action>',
+                '<module[\w-]+>/<controller[\w-]+>'                    => '<module>/<controller>/index',
+                '<module[\w-]+>/<controller>/<action:(create|update)>' => '<module>/<controller>/save',
+                '<controller[\w-]+>/<action[\w-]+>'                    => '<controller>/<action>',
+                'activation/<token:[\w]+>'                             => 'site/activation',
+                '<action[\w-]+>'                                       => 'site/<action>',
             ],
         ],
         'authManager' => [

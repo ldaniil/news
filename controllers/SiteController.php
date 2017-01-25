@@ -9,6 +9,7 @@ use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\RegistrationForm;
 use app\models\User;
+use app\models\search\NewsSearch;
 
 class SiteController extends Controller
 {
@@ -61,7 +62,10 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $newsSearch = new NewsSearch;
+        $newsSearch->load(Yii::$app->request->get());
+
+        return $this->render('index', ['newsSearch' => $newsSearch]);
     }
 
     /**

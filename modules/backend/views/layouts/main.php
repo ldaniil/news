@@ -40,8 +40,8 @@ AppAsset::register($this);
             [
                 'options' => ['class' => 'navbar-nav navbar-right'],
                 'items'   => [
-                    ['label' => 'Новости', 'url' => ['/administration/user/']],
-                    ['label' => 'Пользователи', 'url' => ['/administration/news/']],
+                    ['label' => 'Новости', 'url' => ['/administration/news']],
+                    ['label' => 'Пользователи', 'url' => ['/administration/user']],
                     (
                         '<li>'
                         . Html::beginForm(['/administration/logout'], 'post')

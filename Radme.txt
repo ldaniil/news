@@ -1,6 +1,7 @@
 ### Установка
 
 1. Выполняем команды
+composer install
 php yii migrate --migrationPath=@yii/rbac/migrations/
 php yii rbac
 php yii migrate
