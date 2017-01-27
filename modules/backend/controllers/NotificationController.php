@@ -2,8 +2,10 @@
 
 namespace app\modules\backend\controllers;
 
+use app\models\User;
 use yii;
 use yii\data\ArrayDataProvider;
+use yii\filters\AccessControl;
 use app\entities\Notification;
 use app\entities\notification\sender\Administrator as SenderAdministrator;
 use app\modules\backend\components\Controller;
@@ -12,6 +14,29 @@ use app\models\search\NotificationSettingSearch;
 
 class NotificationController extends Controller
 {
+	/**
+	 * @inheritdoc
+	 */
+	public function behaviors()
+	{
+		return [
+			'access' => [
+				'class' => AccessControl::className(),
+				'rules' => [
+					[
+						'allow'   => true,
+						'roles'   => [User::ROLE_ADMINISTRATOR],
+					],
+				],
+			],
+		];
+	}
+
+	/**
+	 * Список настроек уведомления
+	 *
+	 * @return string
+	 */
 	public function actionIndex()
 	{
 		$settingSearch = new NotificationSettingSearch;
@@ -20,6 +45,11 @@ class NotificationController extends Controller
 		return $this->render('index', ['settingSearch' => $settingSearch]);
 	}
 
+	/**
+	 * Сохранием настройки уведомления
+	 *
+	 * @return string
+	 */
 	public function actionSave()
 	{
 		$id = Yii::$app->request->get('id');

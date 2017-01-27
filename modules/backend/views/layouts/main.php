@@ -26,7 +26,7 @@ AppAsset::register($this);
 <div class="wrap">
     <?php
 
-    if (Yii::$app->user->isAdministrator) {
+    if (Yii::$app->user->identity) {
         NavBar::begin(
             [
                 'brandLabel' => 'Панель управления',
@@ -42,7 +42,7 @@ AppAsset::register($this);
                 'items'   => [
                     ['label' => 'Новости', 'url' => ['/administration/news']],
                     ['label' => 'Пользователи', 'url' => ['/administration/user']],
-                    ['label' => 'Уведомления', 'url' => ['/administration/notification']],
+                    ['label' => 'Уведомления', 'url' => ['/administration/notification'], 'visible' => Yii::$app->user->isAdministrator],
                     (
                         '<li>'
                         . Html::beginForm(['/administration/logout'], 'post')

@@ -6,18 +6,41 @@ use yii;
 use yii\console\Controller;
 use app\models\User;
 
+/**
+ * Class RbacController
+ *
+ * @package app\commands
+ */
 class RbacController extends Controller
 {
 	public function actionInit()
 	{
+		$roles = [
+			[
+				'name' => User::ROLE_ADMINISTRATOR,
+				'description' => 'Администратор'
+			],
+			[
+				'name' => User::ROLE_MODERATOR,
+				'description' => 'Модератор'
+			],
+			[
+				'name' => User::ROLE_USER,
+				'description' => 'Пользователь'
+			],
+		];
+
 		$auth = Yii::$app->authManager;
 
-		$admin = $auth->createRole(User::ROLE_ADMINISTRATOR);
-		$admin->description = 'Администратор';
-		$auth->add($admin);
+		foreach ($roles as $roleData) {
+			if ($auth->getRole($roleData['name'])) {
+				continue;
+			}
 
-		$user = $auth->createRole(User::ROLE_USER);
-		$user->description = 'Пользователь';
-		$auth->add($user);
+			$role = $auth->createRole($roleData['name']);
+			$role->description = $roleData['description'];
+
+			$auth->add($role);
+		}
 	}
 }

@@ -4,6 +4,7 @@ namespace app\models;
 
 use yii;
 use yii\base\Exception;
+use yii\base\NotSupportedException;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
 use app\entities\notification\recipient\EmailInterface;
@@ -29,7 +30,8 @@ use app\models\query\UserQuery;
 class User extends ActiveRecord implements \yii\web\IdentityInterface, EmailInterface, BrowserInterface
 {
     const ROLE_ADMINISTRATOR = 'administrator'; // Администратор
-    const ROLE_USER = 'user';                 // Пользователь
+    const ROLE_MODERATOR = 'moderator';         // Модератор
+    const ROLE_USER = 'user';                   // Пользователь
 
     const STATUS_DELETED = 0;   // Удален
     const STATUS_REGISTRED = 1; // Зарегистрирован
@@ -301,6 +303,16 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface, EmailInte
     public function getIsAdministrator()
     {
         return $this->role && $this->role->name == User::ROLE_ADMINISTRATOR;
+    }
+
+    /**
+     * Проверяет является ли пользователь модератором
+     *
+     * @return bool
+     */
+    public function getIsModerator()
+    {
+        return $this->role && $this->role->name == User::ROLE_MODERATOR;
     }
 
     /**

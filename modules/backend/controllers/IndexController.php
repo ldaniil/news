@@ -9,6 +9,18 @@ use app\modules\backend\models\LoginForm;
 class IndexController extends Controller
 {
 	/**
+	 * @inheritdoc
+	 */
+	public function actions()
+	{
+		return [
+			'error' => [
+				'class' => 'yii\web\ErrorAction',
+			],
+		];
+	}
+
+	/**
 	 * Главная
 	 *
 	 * @return string

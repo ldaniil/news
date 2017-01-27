@@ -2,6 +2,7 @@
 
 namespace app\modules\backend;
 
+use app\models\User;
 use yii;
 
 class Module extends \yii\base\Module
@@ -16,6 +17,8 @@ class Module extends \yii\base\Module
 		parent::init();
 
 		Yii::configure($this, require(__DIR__ . '/config.php'));
+
+		Yii::$app->errorHandler->errorAction = 'administration/index/error';
 	}
 
 	/**
@@ -29,11 +32,23 @@ class Module extends \yii\base\Module
 			return false;
 		}
 
-		// Админка доступна только администратору
-		if (!Yii::$app->user->isAdministrator && $action->id != 'login') {
-			Yii::$app->response->redirect('/administration/login');
+		// Админка доступна только администратору и модератору
+		if ($action->id != 'login') {
+			if (!$this->hasAccess(Yii::$app->user->identity)) {
+				Yii::$app->response->redirect('/administration/login');
+			}
 		}
 
 		return true;
+	}
+
+	/**
+	 * Проверяет есть ли доступ у пользователя к админке
+	 *
+	 * @return bool
+	 */
+	public function hasAccess(User $user)
+	{
+		return $user->isAdministrator || $user->isModerator;
 	}
 }

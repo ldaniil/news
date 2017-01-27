@@ -35,8 +35,7 @@ class LoginForm extends \app\models\LoginForm
     {
         if (!$this->hasErrors()) {
             $user = $this->getUser();
-
-            if (!$user || !$user->validatePassword($this->password) || !$user->isAdministrator) {
+            if (!$user || !$user->validatePassword($this->password) || !Yii::$app->controller->module->hasAccess($user)) {
                 $this->addError($attribute, 'Incorrect username or password.');
             }
         }
