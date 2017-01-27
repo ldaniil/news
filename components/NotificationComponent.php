@@ -33,41 +33,62 @@ class NotificationComponent extends Component implements BootstrapInterface
 					$setting->model,
 					$setting->event,
 					function ($event) use ($setting) {
-						if ($event->sender instanceof SenderInterface) {
-							// Обрабатываем правила маршрутизации уведомления
-							foreach ($setting->routes as $route) {
-								if (!empty($route['transports'])) {
-									// Список получателей полученный согласно правилам маршрута
-									$recipients = $this->getRecipients($route);
-
-									if ($recipients) {
-										// Отправляем уведомление согласно способу получения
-										foreach ($route['transports'] as $transportType) {
-											$transport = $this->buildTransport($transportType);
-
-											// Отправляем уведомление каждому получателю
-											foreach ($recipients as $recipient) {
-												$notification = (new Notification())
-													->setTitle($setting->title)
-													->setMessage($setting->message);
-												$this->prepareNotification($notification, $event->sender, $recipient);
-												$transport->send($notification, $recipient);
-											}
-										}
-									}
-								}
-							}
-						} else {
-							throw new ErrorException(
-								get_class($event->sender)
-								. ' должен поддерживать интерфейс '
-								. SenderInterface::class
-							);
-						}
+						$this->send($event->sender, $setting);
 					}
 				);
 			}
 		}
+	}
+
+	/**
+	 * Отправляет уведомление
+	 *
+	 * @param SenderInterface          $sender
+	 * @param NotificationSettingModel $setting
+	 *
+	 * @return bool
+	 * @throws ErrorException
+	 * @throws Exception
+	 */
+	public function send(SenderInterface $sender, NotificationSettingModel $setting)
+	{
+		if ((!$sender instanceof SenderInterface)) {
+			throw new ErrorException(
+				get_class($sender)
+				. ' должен поддерживать интерфейс '
+				. SenderInterface::class
+			);
+		}
+
+		$success = false;
+
+		// Обрабатываем правила маршрутизации уведомления
+		foreach ($setting->routes as $route) {
+			if (!empty($route['transports'])) {
+				// Список получателей полученный согласно правилам маршрута
+				$recipients = $this->getRecipients($route);
+
+				if ($recipients) {
+					// Отправляем уведомление согласно способу получения
+					foreach ($route['transports'] as $transportType) {
+						$transport = $this->buildTransport($transportType);
+
+						// Отправляем уведомление каждому получателю
+						foreach ($recipients as $recipient) {
+							$notification = (new Notification())
+								->setTitle($setting->title)
+								->setMessage($setting->message);
+							$this->prepareNotification($notification, $sender, $recipient);
+							$transport->send($notification, $recipient);
+						}
+
+						$success = true;
+					}
+				}
+			}
+		}
+
+		return $success;
 	}
 
 	/**
