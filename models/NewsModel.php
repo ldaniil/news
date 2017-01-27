@@ -4,6 +4,10 @@ namespace app\models;
 
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
+use yii\helpers\Html;
+use yii\helpers\Url;
+use app\entities\notification\SenderInterface as NotificationSenderInterface;
+use app\entities\Notification;
 
 /**
  * Class NewsModel
@@ -15,8 +19,10 @@ use yii\behaviors\TimestampBehavior;
  * @property int 	$created_at
  * @property int 	$updated_at
  */
-class NewsModel extends ActiveRecord
+class NewsModel extends ActiveRecord implements NotificationSenderInterface
 {
+	const EVENT_NEW = 'new';
+
 	/**
 	 * @inheritdoc
 	 */
@@ -55,6 +61,24 @@ class NewsModel extends ActiveRecord
 		];
 	}
 
+	/**
+	 * @param bool  $insert
+	 * @param array $changedAttributes
+	 */
+	public function afterSave($insert, $changedAttributes)
+	{
+		if ($insert) {
+			$this->trigger(self::EVENT_NEW);
+		}
+
+		parent::afterSave($insert, $changedAttributes);
+	}
+
+	/**
+	 * Возвращает анонс новости
+	 *
+	 * @return null|string
+	 */
 	public function getPreview()
 	{
 		if ($this->isNewRecord) {
@@ -64,5 +88,34 @@ class NewsModel extends ActiveRecord
 		$length = mb_strpos($this->content, '</p>') + 4;
 
 		return mb_substr($this->content, 0, $length);
+	}
+
+	/**
+	 * Возвращает url
+	 *
+	 * @return string
+	 */
+	public function getUrl()
+	{ 
+		return Url::home(true) . 'view/' . $this->id;
+	}
+
+	/**
+	 * Возвращает ссылку
+	 */
+	public function getLink()
+	{
+		return Html::a($this->title, $this->url);
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function getNotificationTemplateVariables()
+	{
+		return [
+			'news.title' => $this->title,
+			'news.link'   => $this->link
+		];
 	}
 }

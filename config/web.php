@@ -6,7 +6,10 @@ $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
     'language' => 'ru-RU',
-    'bootstrap' => ['log'],
+    'bootstrap' => [
+        'log',
+        \app\components\NotificationComponent::class,
+    ],
     'components' => [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
@@ -44,18 +47,23 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                'activation/<token:[\w]+>'                             => 'site/activation',
+                'view/<id:[\d]+>'                                      => 'site/view',
+                '<action[login|logout|registration]+>'                 => 'site/<action>',
                 '<module[\w-]+>'                                       => '<module>/index',
                 '<module[\w-]+>/<action(login|logout)>'                => '<module>/index/<action>',
                 '<module[\w-]+>/<controller[\w-]+>'                    => '<module>/<controller>/index',
                 '<module[\w-]+>/<controller>/<action:(create|update)>' => '<module>/<controller>/save',
                 '<controller[\w-]+>/<action[\w-]+>'                    => '<controller>/<action>',
-                'activation/<token:[\w]+>'                             => 'site/activation',
                 '<action[\w-]+>'                                       => 'site/<action>',
             ],
         ],
         'authManager' => [
             'class' => 'yii\rbac\DbManager',
             'cache' => 'cache' //Включаем кеширование
+        ],
+        'notification' => [
+            'class' =>  \app\components\NotificationComponent::class
         ],
     ],
     'modules' => [

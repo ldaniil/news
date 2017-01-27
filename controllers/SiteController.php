@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\NewsModel;
 use yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
@@ -66,6 +67,13 @@ class SiteController extends Controller
         $newsSearch->load(Yii::$app->request->get());
 
         return $this->render('index', ['newsSearch' => $newsSearch]);
+    }
+
+    public function actionView($id)
+    {
+        $news = NewsModel::findOne($id);
+
+        return $this->render('view', ['news' => $news]);
     }
 
     /**

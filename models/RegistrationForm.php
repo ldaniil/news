@@ -4,6 +4,7 @@ namespace app\models;
 
 use yii;
 use yii\base\Model;
+use app\entities\notification\SenderInterface as NotificationSenderInterface;
 
 /**
  * Форма регистрации
@@ -11,8 +12,13 @@ use yii\base\Model;
  * @property User|null $user This property is read-only.
  *
  */
-class RegistrationForm extends Model
+class RegistrationForm extends Model implements NotificationSenderInterface
 {
+    /**
+     * Событие регистрации нового пользователя
+     */
+    const EVENT_NEW = 'new';
+
     /**
      * @var string
      */
@@ -107,16 +113,29 @@ class RegistrationForm extends Model
                 'user' => $user,
                 'activationLink' => Yii::$app->urlManager->createAbsoluteUrl('/activation/' . $user->token)
             ])
-                ->setFrom('from@domain.com')
+                ->setFrom(Yii::$app->params['email']['noreply'])
                 ->setTo($user->email)
                 ->setSubject('Активация учетной записи')
                 ->send();
 
             $this->success = true;
+            
+            $this->trigger(self::EVENT_NEW);
 
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getNotificationTemplateVariables()
+    {
+        return [
+            'user.email' => $this->email,
+            'user.name'  => $this->fio
+        ];
     }
 }

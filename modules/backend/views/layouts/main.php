@@ -42,6 +42,7 @@ AppAsset::register($this);
                 'items'   => [
                     ['label' => 'Новости', 'url' => ['/administration/news']],
                     ['label' => 'Пользователи', 'url' => ['/administration/user']],
+                    ['label' => 'Уведомления', 'url' => ['/administration/notification']],
                     (
                         '<li>'
                         . Html::beginForm(['/administration/logout'], 'post')

@@ -6,23 +6,27 @@ use yii;
 use yii\base\Exception;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
+use app\entities\notification\recipient\EmailInterface;
+use app\entities\notification\recipient\BrowserInterface;
+use app\models\query\UserQuery;
 
 /**
  * Class User
  *
  * @package app\models
  *
- * @property integer    $id
- * @property string     $email
- * @property string     $password
- * @property int        $status
- * @property string     $token
- * @property string     $fio
- * @property int        $create_at
- * @property int        $updated_at
+ * @property integer     $id
+ * @property string      $email
+ * @property string      $password
+ * @property int         $status
+ * @property string      $token
+ * @property string      $fio
+ * @property int         $create_at
+ * @property int         $updated_at
+ * @property null|string $role
  *
  */
-class User extends ActiveRecord implements \yii\web\IdentityInterface
+class User extends ActiveRecord implements \yii\web\IdentityInterface, EmailInterface, BrowserInterface
 {
     const ROLE_ADMINISTRATOR = 'administrator'; // Администратор
     const ROLE_USER = 'user';                 // Пользователь
@@ -49,6 +53,11 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
     public static function generatePasswordHash($password)
     {
         return md5($password);
+    }
+
+    public static function find()
+    {
+        return new UserQuery(get_called_class());
     }
 
     /**
@@ -201,6 +210,10 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
             throw new Exception('Нельзя устанавливать роль не созданому пользователю');
         }
 
+        if (!empty($this->role)) {
+            throw new Exception('У пользоватяля уже установлена роль: ' . $this->role);
+        }
+
         $auth = Yii::$app->authManager;
         $role = $auth->getRole($name);
 
@@ -239,24 +252,55 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
     }
 
     /**
+     * Возвращает идентификатор пользователя
+     * 
+     * @return int
+     */
+    public function getUserId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Возвращает роль
+     *
+     * @return string
+     */
+    public function getRole()
+    {
+        return $this
+            ->hasOne(AuthAssignment::className(), ['user_id' => 'id'])
+            ->from(AuthAssignment::tableName() . ' role');
+    }
+
+    /**
+     * Возвращает имя
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->fio;
+    }
+
+    /**
+     * Возвращает email
+     *
+     * @return string
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
+
+    /**
      * Проверяет является ли пользователь авминистратором
      *
      * @return bool
      */
     public function getIsAdministrator()
     {
-        if (!$this->isNewRecord) {
-
-            $roles = Yii::$app->authManager->getRolesByUser($this->id);
-
-            foreach ($roles as $role) {
-                if ($role->name == User::ROLE_ADMINISTRATOR) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return $this->role && $this->role->name == User::ROLE_ADMINISTRATOR;
     }
 
     /**
