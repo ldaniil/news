@@ -2,6 +2,7 @@
 
 namespace app\models\search;
 
+use yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use yii\data\Pagination;
@@ -16,7 +17,7 @@ class NewsSearch extends Model
         return new ActiveDataProvider([
             'query' => $query,
             'pagination' => new Pagination([
-                'pageSize' => 20
+                'pageSize' => 10,
             ])
         ]);
     }

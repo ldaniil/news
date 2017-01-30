@@ -66,7 +66,10 @@ class SiteController extends Controller
         $newsSearch = new NewsSearch;
         $newsSearch->load(Yii::$app->request->get());
 
-        return $this->render('index', ['newsSearch' => $newsSearch]);
+        $dataProvider = $newsSearch->search();
+        $dataProvider->pagination->route = '/';
+
+        return $this->render('index', ['dataProvider' => $dataProvider]);
     }
 
     public function actionView($id)

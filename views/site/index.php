@@ -5,7 +5,7 @@
 use yii\widgets\ListView;
 
 echo ListView::widget([
-    'dataProvider' => $newsSearch->search(),
+    'dataProvider' => $dataProvider,
     'itemView'	   => '_news',
 	'summary'	   => '',
 ]);
