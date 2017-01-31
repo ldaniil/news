@@ -38,6 +38,17 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface, EmailInte
     const STATUS_ACTIVE = 2;    // Активнен
 
     /**
+     * Название ролей
+     *
+     * @var array
+     */
+    public static $statusLabels = [
+        self::STATUS_DELETED   => 'Удален',
+        self::STATUS_REGISTRED => 'Зарегистрирован',
+        self::STATUS_ACTIVE    => 'Активирован',
+    ];
+
+    /**
      * @inheritdoc
      */
     public static function tableName()
@@ -136,6 +147,18 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface, EmailInte
 
             ['status', 'default', 'value' => self::STATUS_REGISTRED],
             ['status', 'in', 'range' => [self::STATUS_DELETED, self::STATUS_REGISTRED, self::STATUS_ACTIVE,]],
+        ];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function attributeLabels()
+    {
+        return [
+            'fio'        => 'ФИО',
+            'status'     => 'Статус',
+            'created_at' => 'Дата регистрации',
         ];
     }
 
@@ -293,6 +316,16 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface, EmailInte
     public function getEmail()
     {
         return $this->email;
+    }
+
+    /**
+     * Возвращает название статуса
+     *
+     * @return mixed
+     */
+    public function getStatusLabel()
+    {
+        return self::$statusLabels[$this->status];
     }
 
     /**

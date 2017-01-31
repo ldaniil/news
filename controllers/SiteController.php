@@ -7,8 +7,10 @@ use yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use yii\web\HttpException;
 use app\models\LoginForm;
 use app\models\RegistrationForm;
+use app\models\ActivationForm;
 use app\models\User;
 use app\models\search\NewsSearch;
 
@@ -123,21 +125,36 @@ class SiteController extends Controller
     }
 
     /**
-     * Активация учетной записи
+     * Активация
+     * учетной записи
      *
      * @param $token
      *
-     * @return \yii\web\Response
+     * @return string
+     * @throws HttpException
      */
     public function actionActivation($token)
     {
         $user = User::findByToken($token);
 
-        if ($user && $user->activate()) {
-            Yii::$app->user->login($user, 3600 * 24 * 30);
-            return $this->goHome();
-        }
+        if ($user && Yii::$app->user->isGuest) {
+            if ($user->status == User::STATUS_REGISTRED) {
+                $activation = new ActivationForm(['user' => $user]);
 
-        return $this->render('activation');
+                if ($activation->scenario == ActivationForm::SCENARIO_SET_PASSWORD) {
+                    $activation->load(Yii::$app->request->post());
+                }
+
+                if ($activation->activate()) {
+                    return $this->goHome();
+                }
+
+                return $this->render('activation', ['activation' => $activation]);
+            } else {
+                return $this->goHome();
+            }
+        } else {
+            throw new HttpException(404);
+        }
     }
 }

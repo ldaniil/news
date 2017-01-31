@@ -20,6 +20,11 @@ class RegistrationForm extends Model implements NotificationSenderInterface
     const EVENT_NEW = 'new';
 
     /**
+     * Регистрация из админки
+     */
+    const SCENARIO_BACKEND = 'backend';
+
+    /**
      * @var string
      */
     public $email;
@@ -55,6 +60,17 @@ class RegistrationForm extends Model implements NotificationSenderInterface
             ['email', 'unique', 'targetClass' => User::class, 'targetAttribute' => 'email'],
             ['password', 'validatePassword'],
         ];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function scenarios()
+    {
+        $scenarios = parent::scenarios();
+        $scenarios[self::SCENARIO_BACKEND] = ['email', 'fio'];
+
+        return $scenarios;
     }
 
     /**
@@ -102,7 +118,10 @@ class RegistrationForm extends Model implements NotificationSenderInterface
             'fio'       => $this->fio,
             'status'    => User::STATUS_REGISTRED,
         ]);
-        $user->setPassword($this->password);
+
+        if ($this->scenario == self::SCENARIO_DEFAULT) {
+            $user->setPassword($this->password);
+        }
         
         if ($user->save()) {
             $user

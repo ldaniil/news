@@ -34,7 +34,7 @@ class Module extends \yii\base\Module
 
 		// Админка доступна только администратору и модератору
 		if ($action->id != 'login') {
-			if (!$this->hasAccess(Yii::$app->user->identity)) {
+			if (Yii::$app->user->isGuest || (Yii::$app->user && !$this->hasAccess(Yii::$app->user->identity))) {
 				Yii::$app->response->redirect('/administration/login');
 			}
 		}
